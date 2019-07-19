@@ -208,7 +208,8 @@ class YTVOSeval:
                     u += maskUtils.area(g)
                 elif d and not g:
                     u += maskUtils.area(d)
-            return i / u
+            iou = i / u if u > .0 else .0
+            return iou
         ious = np.zeros([len(d), len(g)])
         for i, j in np.ndindex(ious.shape):
             ious[i, j] = iou_seq(d[i], g[j])
