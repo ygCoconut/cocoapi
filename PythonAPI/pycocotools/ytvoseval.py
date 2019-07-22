@@ -208,6 +208,8 @@ class YTVOSeval:
                     u += maskUtils.area(g)
                 elif d and not g:
                     u += maskUtils.area(d)
+            if not u > .0:
+                print("Mask sizes in video {} and category {} may not match!".format(vidId, catId))
             iou = i / u if u > .0 else .0
             return iou
         ious = np.zeros([len(d), len(g)])
