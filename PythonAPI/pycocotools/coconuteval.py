@@ -103,10 +103,12 @@ class YTVOSeval:
         if p.useCats:
             gts=self.cocoGt.loadAnns(self.cocoGt.getAnnIds(vidIds=p.vidIds, catIds=p.catIds))
             dts=self.cocoDt.loadAnns(self.cocoDt.getAnnIds(vidIds=p.vidIds, catIds=p.catIds))
+            print('haha')
         else:
             gts=self.cocoGt.loadAnns(self.cocoGt.getAnnIds(vidIds=p.vidIds))
             dts=self.cocoDt.loadAnns(self.cocoDt.getAnnIds(vidIds=p.vidIds))
-
+            print('hahaha')
+        
         # convert ground truth to mask if iouType == 'segm'
         if p.iouType == 'segm':
             _toMask(gts, self.cocoGt)
@@ -168,6 +170,8 @@ class YTVOSeval:
              ]
         self._paramsEval = copy.deepcopy(self.params)
         toc = time.time()
+        import pdb; pdb.set_trace()
+        
         print('DONE (t={:0.2f}s).'.format(toc-tic))
 
     def computeIoU(self, vidId, catId):
@@ -216,6 +220,7 @@ class YTVOSeval:
         for i, j in np.ndindex(ious.shape):
             ious[i, j] = iou_seq(d[i], g[j])
         #print(vidId, catId, ious.shape, ious)
+                
         return ious
 
     def computeOks(self, imgId, catId):
@@ -277,7 +282,7 @@ class YTVOSeval:
             return None
 
         for g in gt:
-            if g['ignore'] or (g['avg_area']<aRng[0] or g['avg_area']>aRng[1]):
+            if g['ignore'] or (g['avg_area']>aRng[0] or g['avg_area']<aRng[1]):
                 g['_ignore'] = 1
             else:
                 g['_ignore'] = 0
