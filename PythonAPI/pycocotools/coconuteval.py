@@ -103,11 +103,9 @@ class YTVOSeval:
         if p.useCats:
             gts=self.cocoGt.loadAnns(self.cocoGt.getAnnIds(vidIds=p.vidIds, catIds=p.catIds))
             dts=self.cocoDt.loadAnns(self.cocoDt.getAnnIds(vidIds=p.vidIds, catIds=p.catIds))
-            print('haha')
         else:
             gts=self.cocoGt.loadAnns(self.cocoGt.getAnnIds(vidIds=p.vidIds))
             dts=self.cocoDt.loadAnns(self.cocoDt.getAnnIds(vidIds=p.vidIds))
-            print('hahaha')
         
         # convert ground truth to mask if iouType == 'segm'
         if p.iouType == 'segm':
@@ -170,7 +168,9 @@ class YTVOSeval:
              ]
         self._paramsEval = copy.deepcopy(self.params)
         toc = time.time()
-        import pdb; pdb.set_trace()
+        print(self.evalImgs[3]['aRng'])
+        print(self.evalImgs[3]['gtIds'])
+#         import pdb; pdb.set_trace()
         
         print('DONE (t={:0.2f}s).'.format(toc-tic))
 
@@ -282,7 +282,7 @@ class YTVOSeval:
             return None
 
         for g in gt:
-            if g['ignore'] or (g['avg_area']>aRng[0] or g['avg_area']<aRng[1]):
+            if g['ignore'] or g['avg_area']<aRng[0] or g['avg_area']>aRng[1]:
                 g['_ignore'] = 1
             else:
                 g['_ignore'] = 0
@@ -328,6 +328,7 @@ class YTVOSeval:
                     dtIg[tind,dind] = gtIg[m]
                     dtm[tind,dind]  = gt[m]['id']
                     gtm[tind,m]     = d['id']
+#                     import pdb;pdb.set_trace()
         # set unmatched detections outside of area range to ignore
         a = np.array([d['avg_area']<aRng[0] or d['avg_area']>aRng[1] for d in dt]).reshape((1, len(dt)))
         dtIg = np.logical_or(dtIg, np.logical_and(dtm==0, np.repeat(a,T,0)))
