@@ -98,7 +98,7 @@ class YTVOSeval:
                 if len(l)==0:
                   ann['avg_area'] = 0
                 else:
-                  ann['avg_area'] = np.array(l).sum() 
+                  ann['avg_area'] = np.array(l).sum()
         p = self.params
         if p.useCats:
             gts=self.cocoGt.loadAnns(self.cocoGt.getAnnIds(vidIds=p.vidIds, catIds=p.catIds))
@@ -168,9 +168,29 @@ class YTVOSeval:
              ]
         self._paramsEval = copy.deepcopy(self.params)
         toc = time.time()
-        print(self.evalImgs[3]['aRng'])
-        print(self.evalImgs[3]['gtIds'])
-#         import pdb; pdb.set_trace()
+
+        # Additional information: range, gtids, predids
+        def print_rangeinfo():
+            print('\n')
+            print(self.evalImgs[0]['aRng'])
+            print(self.evalImgs[0]['gtIds']*(1 - self.evalImgs[0]['gtIgnore']))
+            print(self.evalImgs[0]['dtIds']*(1 - self.evalImgs[0]['dtIgnore'][0]))
+            print('\n')
+            print(self.evalImgs[1]['aRng'])
+            print(self.evalImgs[1]['gtIds']*(1 - self.evalImgs[1]['gtIgnore']))
+            print(self.evalImgs[1]['dtIds']*(1 - self.evalImgs[1]['dtIgnore'][0]))
+            print('\n')
+            print(self.evalImgs[2]['aRng'])
+            print(self.evalImgs[2]['gtIds']*(1 - self.evalImgs[2]['gtIgnore']))
+            print(self.evalImgs[2]['dtIds']*(1 - self.evalImgs[2]['dtIgnore'][0]))
+            print('\n')
+            print(self.evalImgs[3]['aRng'])
+            print(self.evalImgs[3]['gtIds']*(1 - self.evalImgs[3]['gtIgnore']))
+            print(self.evalImgs[3]['dtIds']*(1 - self.evalImgs[3]['dtIgnore'][0]))
+
+            print(len(self.evalImgs))
+            print('\n')
+        #print_rangeinfo()
         
         print('DONE (t={:0.2f}s).'.format(toc-tic))
 
@@ -282,7 +302,8 @@ class YTVOSeval:
             return None
 
         for g in gt:
-            if g['ignore'] or g['avg_area']<aRng[0] or g['avg_area']>aRng[1]:
+#             if g['ignore'] or g['avg_area']<aRng[0] or g['avg_area']>aRng[1]:
+            if g['ignore'] or g['avg_area']<=aRng[0] or g['avg_area']>aRng[1]:
                 g['_ignore'] = 1
             else:
                 g['_ignore'] = 0
@@ -325,12 +346,14 @@ class YTVOSeval:
                     # if match made store id of match for both dt and gt
                     if m ==-1:
                         continue
+                    # IF GT is ignored, the matched Prediction pair is also ignored
                     dtIg[tind,dind] = gtIg[m]
                     dtm[tind,dind]  = gt[m]['id']
                     gtm[tind,m]     = d['id']
 #                     import pdb;pdb.set_trace()
         # set unmatched detections outside of area range to ignore
-        a = np.array([d['avg_area']<aRng[0] or d['avg_area']>aRng[1] for d in dt]).reshape((1, len(dt)))
+#         a = np.array([d['avg_area']<aRng[0] or d['avg_area']>aRng[1] for d in dt]).reshape((1, len(dt)))
+        a = np.array([d['avg_area']<=aRng[0] or d['avg_area']>aRng[1] for d in dt]).reshape((1, len(dt)))
         dtIg = np.logical_or(dtIg, np.logical_and(dtm==0, np.repeat(a,T,0)))
         # store results for given image and category
         return {
