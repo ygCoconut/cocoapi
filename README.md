@@ -1,3 +1,6 @@
+# This fork of the cocoapi is re-forked from YoutubeVIS. You can follow the same instructions to install this api. Both apis are identical, except for the range of the the 'areaRng' key, which now evalutes the size of an instance based on the amount of voxels instead of average area per frame.
+
+
 # YouTubeVIS data loading and evaluation
 ## Introduction
 
