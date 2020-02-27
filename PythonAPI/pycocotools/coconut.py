@@ -52,7 +52,14 @@ class YTVOS:
         if not annotation_file == None:
             print('loading annotations into memory...')
             tic = time.time()
-            dataset = json.load(open(annotation_file, 'r'))
+            if type(annotation_file) == str or type(annotation_file) == unicode:
+                dataset = json.load(open(annotation_file))
+            elif type(annotation_file) == np.ndarray:
+                dataset = self.loadNumpyAnnotations(annotation_file)
+            else:
+                dataset = annotation_file
+            
+#             import pdb; pdb.set_trace()
             assert type(dataset)==dict, 'annotation file format {} not supported'.format(type(dataset))
             print('Done (t={:0.2f}s)'.format(time.time()- tic))
             self.dataset = dataset

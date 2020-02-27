@@ -6,6 +6,8 @@ import time
 from collections import defaultdict
 from . import mask as maskUtils
 import copy
+import json
+
 
 class YTVOSeval:
     # Interface for evaluating video instance segmentation on the YouTubeVIS dataset.
@@ -125,6 +127,7 @@ class YTVOSeval:
             self._dts[dt['video_id'], dt['category_id']].append(dt)
         self.evalVids = defaultdict(list)   # per-image per-category evaluation results
         self.eval     = {}                  # accumulated evaluation results
+        
 
     def evaluate(self):
         '''
@@ -240,7 +243,6 @@ class YTVOSeval:
         for i, j in np.ndindex(ious.shape):
             ious[i, j] = iou_seq(d[i], g[j])
         #print(vidId, catId, ious.shape, ious)
-                
         return ious
 
     def computeOks(self, imgId, catId):
@@ -309,7 +311,7 @@ class YTVOSeval:
                 g['_ignore'] = 0
 
         # sort dt highest score first, sort gt ignore last
-        gtind = np.argsort([g['_ignore'] for g in gt], kind='mergesort')
+        gtind = np.argsort([g['_ignore'] for g in gt], kind='mergesort')        
         gt = [gt[i] for i in gtind]
         dtind = np.argsort([-d['score'] for d in dt], kind='mergesort')
         dt = [dt[i] for i in dtind[0:maxDet]]
@@ -350,9 +352,9 @@ class YTVOSeval:
                     dtIg[tind,dind] = gtIg[m]
                     dtm[tind,dind]  = gt[m]['id']
                     gtm[tind,m]     = d['id']
-#                     import pdb;pdb.set_trace()
         # set unmatched detections outside of area range to ignore
 #         a = np.array([d['avg_area']<aRng[0] or d['avg_area']>aRng[1] for d in dt]).reshape((1, len(dt)))
+#         import pdb;pdb.set_trace()
         a = np.array([d['avg_area']<=aRng[0] or d['avg_area']>aRng[1] for d in dt]).reshape((1, len(dt)))
         dtIg = np.logical_or(dtIg, np.logical_and(dtm==0, np.repeat(a,T,0)))
         # store results for given image and category
@@ -466,6 +468,7 @@ class YTVOSeval:
                             pass
                         precision[t,:,k,a,m] = np.array(q)
                         scores[t,:,k,a,m] = np.array(ss)
+                        
         self.eval = {
             'params': p,
             'counts': [T, R, K, A, M],
@@ -492,6 +495,7 @@ class YTVOSeval:
 
             aind = [i for i, aRng in enumerate(p.areaRngLbl) if aRng == areaRng]
             mind = [i for i, mDet in enumerate(p.maxDets) if mDet == maxDets]
+            
             if ap == 1:
                 # dimension of precision: [TxRxKxAxM]
                 s = self.eval['precision']
@@ -528,28 +532,14 @@ class YTVOSeval:
             stats[10] = _summarize(0, areaRng='medium', maxDets=self.params.maxDets[2])
             stats[11] = _summarize(0, areaRng='large', maxDets=self.params.maxDets[2])
             return stats
-        def _summarizeKps():
-            stats = np.zeros((10,))
-            stats[0] = _summarize(1, maxDets=20)
-            stats[1] = _summarize(1, maxDets=20, iouThr=.5)
-            stats[2] = _summarize(1, maxDets=20, iouThr=.75)
-            stats[3] = _summarize(1, maxDets=20, areaRng='medium')
-            stats[4] = _summarize(1, maxDets=20, areaRng='large')
-            stats[5] = _summarize(0, maxDets=20)
-            stats[6] = _summarize(0, maxDets=20, iouThr=.5)
-            stats[7] = _summarize(0, maxDets=20, iouThr=.75)
-            stats[8] = _summarize(0, maxDets=20, areaRng='medium')
-            stats[9] = _summarize(0, maxDets=20, areaRng='large')
-            return stats
+
         if not self.eval:
             raise Exception('Please run accumulate() first')
         iouType = self.params.iouType
         if iouType == 'segm' or iouType == 'bbox':
             summarize = _summarizeDets
-        elif iouType == 'keypoints':
-            summarize = _summarizeKps
         self.stats = summarize()
-
+        
     def __str__(self):
         self.summarize()
 
@@ -568,22 +558,10 @@ class Params:
         self.areaRngLbl = ['all', 'small', 'medium', 'large']
         self.useCats = 1
 
-    def setKpParams(self):
-        self.vidIds = []
-        self.catIds = []
-        # np.arange causes trouble.  the data point on arange is slightly larger than the true value
-        self.iouThrs = np.linspace(.5, 0.95, np.round((0.95 - .5) / .05) + 1, endpoint=True)
-        self.recThrs = np.linspace(.0, 1.00, np.round((1.00 - .0) / .01) + 1, endpoint=True)
-        self.maxDets = [20]
-        self.areaRng = [[0 ** 2, 1e5 ** 2], [32 ** 2, 96 ** 2], [96 ** 2, 1e5 ** 2]]
-        self.areaRngLbl = ['all', 'medium', 'large']
-        self.useCats = 1
 
     def __init__(self, iouType='segm'):
         if iouType == 'segm' or iouType == 'bbox':
             self.setDetParams()
-        elif iouType == 'keypoints':
-            self.setKpParams()
         else:
             raise Exception('iouType not supported')
         self.iouType = iouType
