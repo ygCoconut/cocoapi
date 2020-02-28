@@ -38,7 +38,7 @@ def _isArrayLike(obj):
     return hasattr(obj, '__iter__') and hasattr(obj, '__len__')
 
 
-class YTVOS:
+class V3D:
     def __init__(self, annotation_file=None):
         """
         Constructor of Microsoft COCO helper class for reading and visualizing annotations.
@@ -59,7 +59,6 @@ class YTVOS:
             else:
                 dataset = annotation_file
             
-#             import pdb; pdb.set_trace()
             assert type(dataset)==dict, 'annotation file format {} not supported'.format(type(dataset))
             print('Done (t={:0.2f}s)'.format(time.time()- tic))
             self.dataset = dataset
@@ -215,7 +214,7 @@ class YTVOS:
         :param   resFile (str)     : file name of result file
         :return: res (obj)         : result api object
         """
-        res = YTVOS()
+        res = V3D()
         res.dataset['videos'] = [img for img in self.dataset['videos']]
 
         print('Loading and preparing results...')

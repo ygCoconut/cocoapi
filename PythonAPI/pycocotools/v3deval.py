@@ -9,7 +9,7 @@ import copy
 import json
 
 
-class YTVOSeval:
+class V3Deval:
     # Interface for evaluating video instance segmentation on the YouTubeVIS dataset.
     #
     # The usage for YTVOSeval is as follows:
@@ -162,8 +162,7 @@ class YTVOSeval:
 
         evaluateVid = self.evaluateVid
         maxDet = p.maxDets[-1]
-        
-        
+                
         self.evalImgs = [evaluateVid(vidId, catId, areaRng, maxDet)
                  for catId in catIds
                  for areaRng in p.areaRng
@@ -355,8 +354,10 @@ class YTVOSeval:
         # set unmatched detections outside of area range to ignore
 #         a = np.array([d['avg_area']<aRng[0] or d['avg_area']>aRng[1] for d in dt]).reshape((1, len(dt)))
 #         import pdb;pdb.set_trace()
-        a = np.array([d['avg_area']<=aRng[0] or d['avg_area']>aRng[1] for d in dt]).reshape((1, len(dt)))
+        a = np.array([d['avg_area']<aRng[0] or d['avg_area']>aRng[1] for d in dt]).reshape((1, len(dt)))
+                
         dtIg = np.logical_or(dtIg, np.logical_and(dtm==0, np.repeat(a,T,0)))
+        
         # store results for given image and category
         return {
                 'video_id':     vidId,
@@ -433,8 +434,7 @@ class YTVOSeval:
                     if npig == 0:
                         continue
                     tps = np.logical_and(               dtm,  np.logical_not(dtIg) )
-                    fps = np.logical_and(np.logical_not(dtm), np.logical_not(dtIg) )
-
+                    fps = np.logical_and(np.logical_not(dtm), np.logical_not(dtIg) )                    
                     tp_sum = np.cumsum(tps, axis=1).astype(dtype=np.float)
                     fp_sum = np.cumsum(fps, axis=1).astype(dtype=np.float)
                     for t, (tp, fp) in enumerate(zip(tp_sum, fp_sum)):
@@ -468,6 +468,7 @@ class YTVOSeval:
                             pass
                         precision[t,:,k,a,m] = np.array(q)
                         scores[t,:,k,a,m] = np.array(ss)
+                    import pdb;pdb.set_trace()
                         
         self.eval = {
             'params': p,
@@ -553,7 +554,8 @@ class Params:
         # np.arange causes trouble.  the data point on arange is slightly larger than the true value
         self.iouThrs = np.linspace(.5, 0.95, np.round((0.95 - .5) / .05) + 1, endpoint=True)
         self.recThrs = np.linspace(.0, 1.00, np.round((1.00 - .0) / .01) + 1, endpoint=True)
-        self.maxDets = [1, 10, 100]
+        #self.maxDets = [1, 10, 100]
+        self.maxDets = [100]
         self.areaRng = [[0 ** 2, 1e5 ** 2], [0 ** 2, 128 ** 2], [ 128 ** 2, 256 ** 2], [256 ** 2, 1e5 ** 2]]
         self.areaRngLbl = ['all', 'small', 'medium', 'large']
         self.useCats = 1
