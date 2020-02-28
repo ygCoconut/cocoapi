@@ -353,7 +353,6 @@ class V3Deval:
                     gtm[tind,m]     = d['id']
         # set unmatched detections outside of area range to ignore
 #         a = np.array([d['avg_area']<aRng[0] or d['avg_area']>aRng[1] for d in dt]).reshape((1, len(dt)))
-#         import pdb;pdb.set_trace()
         a = np.array([d['avg_area']<aRng[0] or d['avg_area']>aRng[1] for d in dt]).reshape((1, len(dt)))
                 
         dtIg = np.logical_or(dtIg, np.logical_and(dtm==0, np.repeat(a,T,0)))
@@ -468,7 +467,6 @@ class V3Deval:
                             pass
                         precision[t,:,k,a,m] = np.array(q)
                         scores[t,:,k,a,m] = np.array(ss)
-                    import pdb;pdb.set_trace()
                         
         self.eval = {
             'params': p,
